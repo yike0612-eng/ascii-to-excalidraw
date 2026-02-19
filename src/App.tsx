@@ -109,20 +109,28 @@ function App() {
 
     elements.forEach((el) => {
       const options = {
-        roughness: 1.5,
-        stroke: '#1e1e1e',
-        strokeWidth: 2,
-        seed: 42,
+        roughness: 2.5, // 强度抖动
+        bowing: 3.0,    // 明显的手绘弯曲感
+        stroke: '#2a2a2a',
+        strokeWidth: 1.8,
+        seed: Math.floor(el.x * 13 + el.y * 31), // 基于位置的唯一随机种子，防止全局一致性
       };
 
       if (el.type === 'line' && el.x2 !== undefined && el.y2 !== undefined) {
         rc.line(el.x, el.y, el.x2, el.y2, options);
       } else if (el.type === 'rectangle' && el.width !== undefined && el.height !== undefined) {
-        rc.rectangle(el.x, el.y, el.width, el.height, { ...options, fill: 'rgba(99, 102, 241, 0.05)', fillStyle: 'hachure' });
+        rc.rectangle(el.x, el.y, el.width, el.height, {
+          ...options,
+          fill: 'rgba(99, 102, 241, 0.1)',
+          fillStyle: 'zigzag', // 更有个性的锯齿填充
+          hachureAngle: 65,
+          hachureGap: 6
+        });
       } else if (el.type === 'circle' && el.width !== undefined) {
         rc.circle(el.x, el.y, el.width, { ...options, fill: 'rgba(0,0,0,0.05)' });
       } else if (el.type === 'text' && el.text) {
-        ctx.font = '20px "Segoe UI", Tahoma, Geneva, Verdana, sans-serif';
+        // 使用更具教学亲和力的手画体
+        ctx.font = '700 18px "Comic Sans MS", "Marker Felt", cursive';
         ctx.fillStyle = '#1e1e1e';
         ctx.fillText(el.text, el.x, el.y);
       }

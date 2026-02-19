@@ -17,11 +17,11 @@ export interface Element {
 export function parseASCII(ascii: string): Element[] {
   const lines = ascii.split('\n');
   const elements: Element[] = [];
-  const charWidth = 12; // 稍微调宽
-  const charHeight = 22;
+  const charWidth = 14;
+  const charHeight = 24;
+  const padding = 4; // 增加间距防止粘连
 
-  // 1. 扫描矩形框 (例如 [ User ] 或 +---+ )
-  // 识别 [...] 模式
+  // 1. 扫描矩形框 (支持 [ box ])
   for (let r = 0; r < lines.length; r++) {
     const line = lines[r];
     let startIdx = -1;
@@ -29,20 +29,20 @@ export function parseASCII(ascii: string): Element[] {
       if (line[c] === '[') {
         startIdx = c;
       } else if (line[c] === ']' && startIdx !== -1) {
-        const width = (c - startIdx + 1) * charWidth;
+        const width = (c - startIdx + 1) * charWidth - padding;
         elements.push({
           type: 'rectangle',
-          x: startIdx * charWidth,
-          y: r * charHeight + 5,
+          x: startIdx * charWidth + padding / 2,
+          y: r * charHeight + padding,
           width: width,
-          height: charHeight
+          height: charHeight - padding * 2
         });
         startIdx = -1;
       }
     }
   }
 
-  // 2. 扫描线条
+  // 2. 扫描线条与文本
   for (let r = 0; r < lines.length; r++) {
     const line = lines[r];
     for (let c = 0; c < line.length; c++) {
@@ -50,20 +50,19 @@ export function parseASCII(ascii: string): Element[] {
       const x = c * charWidth;
       const y = r * charHeight;
 
-      if (char === '+' || char === '*' || char === '.') {
-        // 连接点
-        elements.push({ type: 'circle', x: x + 6, y: y + 11, width: 3, height: 3 });
+      if (char === '+' || char === '*') {
+        elements.push({ type: 'circle', x: x + charWidth / 2, y: y + charHeight / 2, width: 4, height: 4 });
       } else if (char === '-' || char === '_' || char === '=') {
-        elements.push({ type: 'line', x, y: y + 11, x2: x + charWidth, y2: y + 11 });
+        // 水平线：稍微收缩两端防止连接处过度重合导致变粗
+        elements.push({ type: 'line', x: x + 2, y: y + charHeight / 2, x2: x + charWidth - 2, y2: y + charHeight / 2 });
       } else if (char === '|') {
-        elements.push({ type: 'line', x: x + 6, y, x2: x + 6, y2: y + charHeight });
+        elements.push({ type: 'line', x: x + charWidth / 2, y: y + 2, x2: x + charWidth / 2, y2: y + charHeight - 2 });
       } else if (char === '/') {
-        elements.push({ type: 'line', x: x + charWidth, y, x2: x, y2: y + charHeight });
+        elements.push({ type: 'line', x: x + charWidth - 2, y: y + 2, x2: x + 2, y2: y + charHeight - 2 });
       } else if (char === '\\') {
-        elements.push({ type: 'line', x, y, x2: x + charWidth, y2: y + charHeight });
+        elements.push({ type: 'line', x: x + 2, y: y + 2, x2: x + charWidth - 2, y2: y + charHeight - 2 });
       } else if (char !== ' ' && char !== '[' && char !== ']' && char !== '\r') {
-        // 如果不是框架字符，则作为文本
-        elements.push({ type: 'text', x: x + 2, y: y + 16, text: char });
+        elements.push({ type: 'text', x: x + 2, y: y + charHeight / 2 + 6, text: char });
       }
     }
   }
